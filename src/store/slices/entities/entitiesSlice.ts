@@ -1,8 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Entity, CreateEntityDto } from '@/types/entity.types'
-import { generateId } from '@/utils/formatters'
 
-interface EntitiesState {
+export interface EntitiesState {
   entities: Entity[]
   isLoading: boolean
   error: string | null
@@ -18,13 +17,11 @@ const entitiesSlice = createSlice({
   name: 'entities',
   initialState,
   reducers: {
-    addEntity: (state, action: PayloadAction<CreateEntityDto>) => {
-      const newEntity: Entity = {
-        ...action.payload,
-        id: generateId(),
-        createdAt: new Date().toISOString(),
-      }
-      state.entities.push(newEntity)
+    addEntity: (state, action: PayloadAction<Entity>) => {
+      state.entities.push(action.payload)
+    },
+    setEntities: (state, action: PayloadAction<Entity[]>) => {
+      state.entities = action.payload
     },
     removeEntity: (state, action: PayloadAction<string>) => {
       state.entities = state.entities.filter(
@@ -54,7 +51,13 @@ const entitiesSlice = createSlice({
   },
 })
 
-export const { addEntity, removeEntity, updateEntity, setLoading, setError } =
-  entitiesSlice.actions
+export const {
+  addEntity,
+  setEntities,
+  removeEntity,
+  updateEntity,
+  setLoading,
+  setError,
+} = entitiesSlice.actions
 
 export default entitiesSlice.reducer

@@ -1,48 +1,38 @@
-export type Crop =
-  | 'soja'
-  | 'milho'
-  | 'algodao'
-  | 'cafe'
-  | 'cana-de-acucar'
-
-export const CROP_LABELS: Record<Crop, string> = {
-  soja: 'Soja',
-  milho: 'Milho',
-  algodao: 'Algodão',
-  cafe: 'Café',
-  'cana-de-acucar': 'Cana-de-açúcar',
+export interface EntityAddress {
+  id?: string
+  street: string
+  number: string
+  city: string
+  state: string
+  zipCode: string
 }
 
-export const AVAILABLE_CROPS: Crop[] = [
-  'soja',
-  'milho',
-  'algodao',
-  'cafe',
-  'cana-de-acucar',
-]
+export interface EntityCustomer {
+  id: string
+  document: string
+  name: string
+  email: string
+}
 
 export interface Entity {
   id: string
   name: string
-  producerId: string
-  city: string
-  state: string
+  customerId?: string
+  customer?: EntityCustomer
+  address: EntityAddress
   totalArea: number
-  agriculturalArea: number
+  agricultureArea: number
   vegetationArea: number
-  crops: Crop[]
   createdAt: string
 }
 
 export interface CreateEntityDto {
   name: string
-  producerId: string
-  city: string
-  state: string
+  customerId: string
+  address: EntityAddress
   totalArea: number
-  agriculturalArea: number
+  agricultureArea: number
   vegetationArea: number
-  crops: Crop[]
 }
 
 export type UpdateEntityDto = Partial<CreateEntityDto>

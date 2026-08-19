@@ -1,19 +1,18 @@
 import styled from '@emotion/styled'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormField } from '@/components/molecules/FormField'
 import { SelectField } from '@/components/molecules/SelectField'
 import { Button } from '@/components/atoms/Button'
-import { Label } from '@/components/atoms/Label'
 import { entitySchema, EntityFormData } from '@/schemas/entity.schema'
-import { AVAILABLE_CROPS, CROP_LABELS, Crop } from '@/types/entity.types'
+import { Entity } from '@/types/entity.types'
 import { Producer } from '@/types/producer.types'
 import { BRAZILIAN_STATES } from '@/utils/brazilianStates'
 import { theme } from '@/styles/theme'
 
 interface EntityFormProps {
   producers: Producer[]
-  onSubmitSuccess: (data: EntityFormData) => void
+  onSubmitSuccess: (data: EntityFormData) => Promise<Entity | undefined>
   isLoading?: boolean
 }
 
@@ -43,58 +42,15 @@ const FormRow3 = styled.div`
   }
 `
 
-const CropsWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing.xs};
-`
-
-const CropsGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${theme.spacing.sm};
-`
-
-const CropCheckbox = styled.label<{ isSelected: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: ${theme.borderRadius.full};
-  border: 1.5px solid
-    ${({ isSelected }) =>
-      isSelected ? theme.colors.primary : theme.colors.border};
-  background-color: ${({ isSelected }) =>
-    isSelected ? theme.colors.primaryLighter : theme.colors.surface};
-  color: ${({ isSelected }) =>
-    isSelected ? theme.colors.primary : theme.colors.textSecondary};
-  font-size: ${theme.typography.sizes.sm};
-  font-weight: ${({ isSelected }) =>
-    isSelected
-      ? theme.typography.weights.semibold
-      : theme.typography.weights.regular};
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-
-  &:hover {
-    border-color: ${theme.colors.primaryLight};
-  }
-
-  input {
-    display: none;
-  }
-`
-
-const ErrorMessage = styled.span`
-  font-size: ${theme.typography.sizes.xs};
-  color: ${theme.colors.error};
-`
-
 const FormActions = styled.div`
   display: flex;
   justify-content: flex-end;
   padding-top: ${theme.spacing.sm};
+`
+
+const FormError = styled.span`
+  color: ${theme.colors.error};
+  font-size: ${theme.typography.sizes.sm};
 `
 
 const stateOptions = BRAZILIAN_STATES.map((state) => ({
@@ -116,23 +72,17 @@ export const EntityForm = ({
   const {
     register,
     handleSubmit,
-    control,
     reset,
-    watch,
     formState: { errors },
-  } = useForm<EntityFormData>({
-    resolver: zodResolver(entitySchema),
-    defaultValues: { crops: [] },
-  })
+  } = useForm<EntityFormData>({ resolver: zodResolver(entitySchema) })
 
-  const selectedCrops = watch('crops') as Crop[]
+  const submitEntity = async (data: EntityFormData) => {
+    const createdEntity = await onSubmitSuccess(data)
 
-  const submitEntity = (data: EntityFormData) => {
-    onSubmitSuccess(data)
-    reset()
+    if (createdEntity) {
+      reset()
+    }
   }
-
-  const isCropSelected = (crop: Crop) => selectedCrops?.includes(crop)
 
   return (
     <Form onSubmit={handleSubmit(submitEntity)} noValidate>
@@ -147,32 +97,63 @@ export const EntityForm = ({
 
       <SelectField
         label="Produtor responsável"
-        htmlFor="producerId"
+        htmlFor="customerId"
         placeholder="Selecione um produtor"
         options={buildProducerOptions(producers)}
         required
-        errorMessage={errors.producerId?.message}
-        {...register('producerId')}
+        errorMessage={errors.customerId?.message}
+        {...register('customerId')}
       />
 
       <FormRow>
         <FormField
+          label="Rua"
+          htmlFor="address.street"
+          placeholder="Ex: Rodovia MT-242"
+          required
+          errorMessage={errors.address?.street?.message}
+          {...register('address.street')}
+        />
+
+        <FormField
+          label="Número"
+          htmlFor="address.number"
+          placeholder="Ex: 100"
+          required
+          errorMessage={errors.address?.number?.message}
+          {...register('address.number')}
+        />
+      </FormRow>
+
+      <FormRow>
+        <FormField
           label="Cidade"
-          htmlFor="city"
+          htmlFor="address.city"
           placeholder="Ex: Sorriso"
           required
-          errorMessage={errors.city?.message}
-          {...register('city')}
+          errorMessage={errors.address?.city?.message}
+          {...register('address.city')}
         />
 
         <SelectField
           label="Estado"
-          htmlFor="state"
+          htmlFor="address.state"
           placeholder="Selecione o estado"
           options={stateOptions}
           required
-          errorMessage={errors.state?.message}
-          {...register('state')}
+          errorMessage={errors.address?.state?.message}
+          {...register('address.state')}
+        />
+      </FormRow>
+
+      <FormRow>
+        <FormField
+          label="CEP"
+          htmlFor="address.zipCode"
+          placeholder="Ex: 78890-000"
+          required
+          errorMessage={errors.address?.zipCode?.message}
+          {...register('address.zipCode')}
         />
       </FormRow>
 
@@ -191,14 +172,14 @@ export const EntityForm = ({
 
         <FormField
           label="Área Agricultável (ha)"
-          htmlFor="agriculturalArea"
+          htmlFor="agricultureArea"
           type="number"
           min={0}
           step="0.01"
           placeholder="0"
           required
-          errorMessage={errors.agriculturalArea?.message}
-          {...register('agriculturalArea', { valueAsNumber: true })}
+          errorMessage={errors.agricultureArea?.message}
+          {...register('agricultureArea', { valueAsNumber: true })}
         />
 
         <FormField
@@ -214,40 +195,9 @@ export const EntityForm = ({
         />
       </FormRow3>
 
-      <CropsWrapper>
-        <Label required>Culturas plantadas</Label>
-        <Controller
-          name="crops"
-          control={control}
-          render={({ field }) => (
-            <CropsGrid>
-              {AVAILABLE_CROPS.map((crop) => {
-                const selected = isCropSelected(crop)
-                const toggleCrop = () => {
-                  const updatedCrops = selected
-                    ? field.value.filter((c: string) => c !== crop)
-                    : [...(field.value ?? []), crop]
-                  field.onChange(updatedCrops)
-                }
-
-                return (
-                  <CropCheckbox key={crop} isSelected={selected}>
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={toggleCrop}
-                    />
-                    {CROP_LABELS[crop]}
-                  </CropCheckbox>
-                )
-              })}
-            </CropsGrid>
-          )}
-        />
-        {errors.crops && (
-          <ErrorMessage role="alert">{errors.crops.message}</ErrorMessage>
-        )}
-      </CropsWrapper>
+      {errors.root?.message && (
+        <FormError role="alert">{errors.root.message}</FormError>
+      )}
 
       <FormActions>
         <Button type="submit" isLoading={isLoading}>

@@ -1,16 +1,30 @@
 import styled from '@emotion/styled'
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import { ChartCard } from '@/components/molecules/ChartCard'
+import {
+  DashboardCropMetric,
+  DashboardLandUseMetric,
+  DashboardStateMetric,
+} from '@/types/dashboard.types'
+import { formatHectares } from '@/utils/area.utils'
 import { theme } from '@/styles/theme'
 
-interface ChartDataEntry {
-  name: string
-  value: number
-}
-
 interface DashboardChartsProps {
-  farmsByCrop: ChartDataEntry[]
-  farmsByState: ChartDataEntry[]
+  crops: DashboardCropMetric[]
+  states: DashboardStateMetric[]
+  landUse: DashboardLandUseMetric
 }
 
 const CHART_COLORS = [
@@ -32,71 +46,90 @@ const ChartsGrid = styled.div`
   }
 `
 
-const chartHasData = (data: ChartDataEntry[]): boolean => data.length > 0
+const FullWidthChart = styled.div`
+  grid-column: 1 / -1;
+`
+
+const hasData = (data: unknown[]): boolean => data.length > 0
+
+const buildLandUseData = (landUse: DashboardLandUseMetric) => [
+  { name: 'Agricultura', value: landUse.agricultureArea },
+  { name: 'Vegetação', value: landUse.vegetationArea },
+]
 
 export const DashboardCharts = ({
-  farmsByCrop,
-  farmsByState,
-}: DashboardChartsProps) => (
-  <ChartsGrid>
-    <ChartCard
-      title="Fazendas por Cultura"
-      isEmpty={!chartHasData(farmsByCrop)}
-    >
-      <ResponsiveContainer width="100%" height={280}>
-        <PieChart>
-          <Pie
-            data={farmsByCrop}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={100}
-            paddingAngle={3}
-            dataKey="value"
-          >
-            {farmsByCrop.map((_, index) => (
-              <Cell
-                key={`crop-cell-${index}`}
-                fill={CHART_COLORS[index % CHART_COLORS.length]}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(value: number) => [`${value} fazenda(s)`, '']}
-          />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
-    </ChartCard>
+  crops,
+  states,
+  landUse,
+}: DashboardChartsProps) => {
+  const landUseData = buildLandUseData(landUse)
 
-    <ChartCard
-      title="Fazendas por Estado"
-      isEmpty={!chartHasData(farmsByState)}
-    >
-      <ResponsiveContainer width="100%" height={280}>
-        <PieChart>
-          <Pie
-            data={farmsByState}
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={100}
-            paddingAngle={3}
-            dataKey="value"
-          >
-            {farmsByState.map((_, index) => (
-              <Cell
-                key={`state-cell-${index}`}
-                fill={CHART_COLORS[index % CHART_COLORS.length]}
+  return (
+    <ChartsGrid>
+      <ChartCard title="Área plantada por cultura" isEmpty={!hasData(crops)}>
+        <ResponsiveContainer width="100%" height={280}>
+          <BarChart data={crops} margin={{ left: 12, right: 12 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="crop" />
+            <YAxis />
+            <Tooltip
+              formatter={(value: number) => [formatHectares(value), 'Área']}
+            />
+            <Bar dataKey="plantedArea" fill={theme.colors.primaryLight} />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <ChartCard title="Fazendas por estado" isEmpty={!hasData(states)}>
+        <ResponsiveContainer width="100%" height={280}>
+          <PieChart>
+            <Pie
+              data={states}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={100}
+              paddingAngle={3}
+              dataKey="count"
+              nameKey="state"
+            >
+              {states.map((item, index) => (
+                <Cell
+                  key={item.state}
+                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value: number) => [
+                `${value} fazenda(s)`,
+                'Quantidade',
+              ]}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <FullWidthChart>
+        <ChartCard title="Uso do solo" isEmpty={!hasData(landUseData)}>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart
+              data={landUseData}
+              layout="vertical"
+              margin={{ left: 24 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" />
+              <YAxis type="category" dataKey="name" width={90} />
+              <Tooltip
+                formatter={(value: number) => [formatHectares(value), 'Área']}
               />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(value: number) => [`${value} fazenda(s)`, '']}
-          />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
-    </ChartCard>
-  </ChartsGrid>
-)
+              <Bar dataKey="value" fill={theme.colors.primary} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </FullWidthChart>
+    </ChartsGrid>
+  )
+}

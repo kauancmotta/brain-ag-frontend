@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Producer } from '@/types/producer.types'
 
-interface ProducersState {
+export interface ProducersState {
   producers: Producer[]
   isLoading: boolean
   error: string | null
@@ -17,6 +17,9 @@ const producersSlice = createSlice({
   name: 'producers',
   initialState,
   reducers: {
+    setProducers: (state, action: PayloadAction<Producer[]>) => {
+      state.producers = action.payload
+    },
     addProducer: (state, action: PayloadAction<Producer>) => {
       state.producers.push(action.payload)
     },
@@ -48,7 +51,13 @@ const producersSlice = createSlice({
   },
 })
 
-export const { addProducer, removeProducer, updateProducer, setLoading, setError } =
-  producersSlice.actions
+export const {
+  setProducers,
+  addProducer,
+  removeProducer,
+  updateProducer,
+  setLoading,
+  setError,
+} = producersSlice.actions
 
 export default producersSlice.reducer

@@ -56,7 +56,7 @@ const calculateCnpjVerifierDigit = (
  * by convertCharToValue.
  */
 export const validateCnpjDigits = (cnpj: string): boolean => {
-  const normalized = cnpj.toUpperCase().replace(/[.\-\/]/g, '')
+  const normalized = cnpj.toUpperCase().replace(/[.\-/]/g, '')
 
   if (normalized.length !== CNPJ_LENGTH) return false
   if (hasAllSameDigits(normalized)) return false
@@ -76,7 +76,7 @@ export const formatCpf = (cpf: string): string =>
 
 /** Formats a CNPJ for display — supports alphanumeric format: AB.CDE.FGH/0001-00 */
 export const formatCnpj = (cnpj: string): string => {
-  const normalized = cnpj.toUpperCase().replace(/[.\-\/]/g, '')
+  const normalized = cnpj.toUpperCase().replace(/[.\-/]/g, '')
   return normalized.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5')
 }
 
@@ -84,7 +84,7 @@ export const formatCnpj = (cnpj: string): string => {
 export const formatDocument = (document: string): string => {
   if (!document) return '—'
 
-  const normalized = document.toUpperCase().replace(/[.\-\/\s]/g, '')
+  const normalized = document.toUpperCase().replace(/[.\-/\s]/g, '')
 
   if (normalized.length === CPF_LENGTH && /^\d+$/.test(normalized))
     return formatCpf(normalized)
@@ -95,4 +95,4 @@ export const formatDocument = (document: string): string => {
   return document
 }
 export const normalizeDocument = (document: string): string =>
-  document.toUpperCase().replace(/[.\-\/\s]/g, '')
+  document.toUpperCase().replace(/[.\-/\s]/g, '')

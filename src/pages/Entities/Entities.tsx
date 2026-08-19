@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { DashboardTemplate } from '@/components/templates/DashboardTemplate'
 import { FormPageTemplate } from '@/components/templates/FormPageTemplate'
 import { EntityForm } from '@/components/organisms/EntityForm'
@@ -11,13 +12,20 @@ const buildProducerNameMap = (producers: Producer[]): Record<string, string> =>
   Object.fromEntries(producers.map((producer) => [producer.id, producer.name]))
 
 export const Entities = () => {
-  const { entities, createEntity, deleteEntity } = useEntities()
+  const navigate = useNavigate()
+  const { entities, createEntity, deleteEntity, isLoading, error } = useEntities()
   const { producers } = useProducers()
 
   const producerNameById = buildProducerNameMap(producers)
 
-  const handleCreateEntity = (data: EntityFormData) => {
-    createEntity(data)
+  const handleCreateEntity = async (data: EntityFormData) => {
+    const createdEntity = await createEntity(data)
+
+    if (createdEntity) {
+      navigate(`/entities/${createdEntity.id}`)
+    }
+
+    return createdEntity
   }
 
   const handleDeleteEntity = (id: string) => {
@@ -28,17 +36,22 @@ export const Entities = () => {
     <DashboardTemplate>
       <FormPageTemplate
         title="Cadastrar Fazenda"
-        description="Preencha os dados da propriedade rural. A soma das áreas agricultável e de vegetação não pode ultrapassar a área total."
+        description="Preencha os dados da propriedade rural. As culturas serão cadastradas dentro de cada safra após o salvamento."
         formSlot={
-          <EntityForm
-            producers={producers}
-            onSubmitSuccess={handleCreateEntity}
-          />
+          <>
+            {error && <p role="alert">{error}</p>}
+            <EntityForm
+              producers={producers}
+              onSubmitSuccess={handleCreateEntity}
+              isLoading={isLoading}
+            />
+          </>
         }
         tableSlot={
           <EntityTable
             entities={entities}
             producerNameById={producerNameById}
+            onViewEntity={(id) => navigate(`/entities/${id}`)}
             onDeleteEntity={handleDeleteEntity}
           />
         }

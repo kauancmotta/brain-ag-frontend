@@ -18,7 +18,9 @@ export const Button = ({
     disabled={disabled || isLoading}
     {...rest}
   >
-    {isLoading && <Loader2 size={16} className="spin" />}
+    {isLoading && (
+      <Loader2 size={16} className="spin" aria-label="Carregando" />
+    )}
     {children}
   </StyledButton>
 )

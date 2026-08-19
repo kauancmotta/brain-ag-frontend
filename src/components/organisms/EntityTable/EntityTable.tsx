@@ -1,9 +1,7 @@
 import styled from '@emotion/styled'
-import { Trash2 } from 'lucide-react'
+import { Eye, Trash2 } from 'lucide-react'
 import { Button } from '@/components/atoms/Button'
-import { Badge } from '@/components/atoms/Badge'
 import { Entity } from '@/types/entity.types'
-import { CROP_LABELS, Crop } from '@/types/entity.types'
 import { formatHectares } from '@/utils/area.utils'
 import { theme } from '@/styles/theme'
 import { cardSurface } from '@/styles/mixins'
@@ -11,6 +9,7 @@ import { cardSurface } from '@/styles/mixins'
 interface EntityTableProps {
   entities: Entity[]
   producerNameById: Record<string, string>
+  onViewEntity: (id: string) => void
   onDeleteEntity: (id: string) => void
 }
 
@@ -57,12 +56,6 @@ const TableCell = styled.td`
   color: ${theme.colors.textPrimary};
 `
 
-const CropList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-`
-
 const EmptyCell = styled.td`
   padding: ${theme.spacing.xl};
   text-align: center;
@@ -73,6 +66,7 @@ const EmptyCell = styled.td`
 export const EntityTable = ({
   entities,
   producerNameById,
+  onViewEntity,
   onDeleteEntity,
 }: EntityTableProps) => {
   const hasEntities = entities.length > 0
@@ -86,7 +80,6 @@ export const EntityTable = ({
             <TableHeadCell>Produtor</TableHeadCell>
             <TableHeadCell>Estado</TableHeadCell>
             <TableHeadCell>Área Total</TableHeadCell>
-            <TableHeadCell>Culturas</TableHeadCell>
             <TableHeadCell>Ações</TableHeadCell>
           </tr>
         </TableHead>
@@ -96,22 +89,22 @@ export const EntityTable = ({
               <TableRow key={entity.id}>
                 <TableCell>{entity.name}</TableCell>
                 <TableCell>
-                  {producerNameById[entity.producerId] ?? '—'}
+                  {entity.customer?.name ??
+                    (entity.customerId
+                    ? producerNameById[entity.customerId] ?? '—'
+                    : '—')}
                 </TableCell>
-                <TableCell>{entity.state}</TableCell>
+                <TableCell>{entity.address?.state ?? '—'}</TableCell>
                 <TableCell>{formatHectares(entity.totalArea)}</TableCell>
                 <TableCell>
-                  <CropList>
-                    {entity.crops.map((crop: Crop) => (
-                      <Badge
-                        key={crop}
-                        label={CROP_LABELS[crop]}
-                        variant="primary"
-                      />
-                    ))}
-                  </CropList>
-                </TableCell>
-                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewEntity(entity.id)}
+                    aria-label={`Visualizar fazenda ${entity.name}`}
+                  >
+                    <Eye size={16} />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -125,7 +118,7 @@ export const EntityTable = ({
             ))
           ) : (
             <tr>
-              <EmptyCell colSpan={6}>
+                <EmptyCell colSpan={5}>
                 Nenhuma fazenda cadastrada ainda.
               </EmptyCell>
             </tr>

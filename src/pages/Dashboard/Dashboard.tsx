@@ -1,5 +1,8 @@
+import { FormEvent, useState } from 'react'
 import styled from '@emotion/styled'
-import { Users, Landmark, Wheat, MapPin } from 'lucide-react'
+import { Landmark, Wheat, MapPin } from 'lucide-react'
+import { Button } from '@/components/atoms/Button'
+import { FormField } from '@/components/molecules/FormField'
 import { DashboardTemplate } from '@/components/templates/DashboardTemplate'
 import { StatCard } from '@/components/molecules/StatCard'
 import { DashboardCharts } from '@/components/organisms/DashboardCharts'
@@ -22,19 +25,79 @@ const MetricsGrid = styled.div`
   }
 `
 
+const FilterBar = styled.form`
+  display: flex;
+  align-items: flex-end;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.xl};
+  padding: ${theme.spacing.md};
+  background: ${theme.colors.surface};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius.md};
+
+  @media (max-width: 600px) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+`
+
+const YearField = styled.div`
+  width: 180px;
+
+  @media (max-width: 600px) {
+    width: 100%;
+  }
+`
+
+const FilterActions = styled.div`
+  display: flex;
+  gap: ${theme.spacing.sm};
+`
+
 export const Dashboard = () => {
-  const { totalProducers, totalFarms, totalHectares, farmsByState, farmsByCrop } =
-    useDashboardMetrics()
+  const [yearInput, setYearInput] = useState('')
+  const [selectedYear, setSelectedYear] = useState<string | undefined>()
+  const { totalFarms, totalHectares, states, crops, landUse, isLoading, error } =
+    useDashboardMetrics(selectedYear)
+
+  const handleFilter = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (yearInput === '' || /^\d{4}$/.test(yearInput)) {
+      setSelectedYear(yearInput || undefined)
+    }
+  }
+
+  const clearFilter = () => {
+    setYearInput('')
+    setSelectedYear(undefined)
+  }
 
   return (
     <DashboardTemplate>
+      <FilterBar onSubmit={handleFilter}>
+        <YearField>
+          <FormField
+            label="Ano da safra"
+            htmlFor="dashboard-year"
+            placeholder="Ex: 2025"
+            value={yearInput}
+            maxLength={4}
+            inputMode="numeric"
+            onChange={(event) => setYearInput(event.target.value.replace(/\D/g, ''))}
+          />
+        </YearField>
+        <FilterActions>
+          <Button type="submit" size="sm">
+            Filtrar
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={clearFilter}>
+            Limpar
+          </Button>
+        </FilterActions>
+      </FilterBar>
+
       <MetricsGrid>
-        <StatCard
-          title="Total de Produtores"
-          value={totalProducers}
-          icon={<Users size={22} />}
-          description="Produtores cadastrados"
-        />
         <StatCard
           title="Total de Fazendas"
           value={totalFarms}
@@ -49,15 +112,19 @@ export const Dashboard = () => {
         />
         <StatCard
           title="Estados cobertos"
-          value={farmsByState.length}
+          value={states.length}
           icon={<MapPin size={22} />}
           description="Estados com fazendas"
         />
       </MetricsGrid>
 
+      {isLoading && <p>Carregando métricas...</p>}
+      {error && <p role="alert">{error}</p>}
+
       <DashboardCharts
-        farmsByCrop={farmsByCrop}
-        farmsByState={farmsByState}
+        crops={crops}
+        states={states}
+        landUse={landUse}
       />
     </DashboardTemplate>
   )

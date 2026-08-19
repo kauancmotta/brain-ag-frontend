@@ -3,13 +3,17 @@ import { entitySchema } from '@/schemas/entity.schema'
 
 const baseValidEntity = {
   name: 'Fazenda Boa Vista',
-  producerId: 'producer-123',
-  city: 'Sorriso',
-  state: 'MT',
+  customerId: 'producer-123',
+  address: {
+    street: 'Rodovia MT-242',
+    number: '100',
+    city: 'Sorriso',
+    state: 'MT',
+    zipCode: '78890000',
+  },
   totalArea: 100,
-  agriculturalArea: 60,
+  agricultureArea: 60,
   vegetationArea: 30,
-  crops: ['soja', 'milho'],
 }
 
 describe('entitySchema', () => {
@@ -21,13 +25,13 @@ describe('entitySchema', () => {
   it('rejeita quando área agricultável + vegetação ultrapassa o total', () => {
     const result = entitySchema.safeParse({
       ...baseValidEntity,
-      agriculturalArea: 80,
+      agricultureArea: 80,
       vegetationArea: 30,
     })
     expect(result.success).toBe(false)
     if (!result.success) {
       const areaError = result.error.issues.find(
-        (issue) => issue.path[0] === 'agriculturalArea'
+        (issue) => issue.path[0] === 'agricultureArea'
       )
       expect(areaError).toBeDefined()
     }
@@ -36,15 +40,15 @@ describe('entitySchema', () => {
   it('aprova quando a soma é exatamente igual à área total', () => {
     const result = entitySchema.safeParse({
       ...baseValidEntity,
-      agriculturalArea: 70,
+      agricultureArea: 70,
       vegetationArea: 30,
     })
     expect(result.success).toBe(true)
   })
 
-  it('rejeita quando não há culturas selecionadas', () => {
-    const result = entitySchema.safeParse({ ...baseValidEntity, crops: [] })
-    expect(result.success).toBe(false)
+  it('aceita uma fazenda sem culturas cadastradas', () => {
+    const result = entitySchema.safeParse(baseValidEntity)
+    expect(result.success).toBe(true)
   })
 
   it('rejeita quando o nome da fazenda é muito curto', () => {

@@ -2,10 +2,8 @@ import styled from '@emotion/styled'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { FormField } from '@/components/molecules/FormField'
-import { SelectField } from '@/components/molecules/SelectField'
 import { Button } from '@/components/atoms/Button'
 import { producerSchema, ProducerFormData } from '@/schemas/producer.schema'
-import { BRAZILIAN_STATES } from '@/utils/brazilianStates'
 import { theme } from '@/styles/theme'
 
 interface ProducerFormProps {

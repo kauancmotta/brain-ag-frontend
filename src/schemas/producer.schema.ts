@@ -3,7 +3,7 @@ import { validateCpfDigits, validateCnpjDigits } from '@/utils/cpfCnpj.utils'
 
 const isValidDocument = (document: string): boolean => {
   const digitsOnly = document.replace(/\D/g, '')
-  const normalized = document.toUpperCase().replace(/[.\-\/]/g, '')
+  const normalized = document.toUpperCase().replace(/[.\-/]/g, '')
 
   if (digitsOnly.length === 11) return validateCpfDigits(digitsOnly)
   if (normalized.length === 14) return validateCnpjDigits(normalized)
